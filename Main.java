@@ -1,146 +1,205 @@
 package LibraryManagement;
 
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Scanner;
 
 public class Main {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws SQLException {
 		Scanner sc=new Scanner(System.in);
-		// TODO Auto-generated method stub
-		Library library=new Library();
-
-		Books b1=new Books("Once upon a time","William",true);
-
-		Books b2=new Books("calender","john",true);
-
-		Books b3=new Books("little john ","henry",true);
-
-		library.addBooks(b1);
-
-		library.addBooks(b2);
-
-		library.addBooks(b3);
-
-		//library.PrintBooks();
-		
-		Student s1=new Student("Rathi","717821p342@kce.ac.in",342,312,"cse");
-		Student s2=new Student("Chitu","717821p308@kce.ac.in",308,313,"It");
-		Student s3=new Student("Moni","717821p332@kce.ac.in",332,314,"cse");
-		Student s4=new Student("sahu","717821p344@kce.ac.in",344,315,"It");
-		library.addUser(s1);
-		library.addUser(s2);
-		library.addUser(s3);
-		library.addUser(s4);
-		
-		Librarian l1=new Librarian("raju","717821p789@kce.ac.in","91-977556677",789);
-		Librarian l2=new Librarian("Chitu","717821p788@kce.ac.in","91-876566777",788);
-		Librarian l3=new Librarian("mohan","717821p787@kce.ac.in","91-98766555",787);
-		Librarian l4=new Librarian("saran","717821p786@kce.ac.in","91-8766544333",786);
-		library.addIncharge(l1);
-		library.addIncharge(l2);
-		library.addIncharge(l3);
-		library.addIncharge(l4);
-		
-		
-	
-	 
+		 String url = "jdbc:mysql://localhost:3306/dbms";
+		   String user_name="root";
+		   String password="root";
+		  // Class.forName("com.mysql.cj.jdbc.Driver");
+       Connection con=DriverManager.getConnection(url,user_name,password);
+		 
 	  while(true) {
+		  System.out.println();
 		  System.out.println("Enter your operation:");
 		  System.out.println("*** 1 =>  search and collect u want a book  ***");
 		  System.out.println("*** 2 =>  return the book ***");
 		  System.out.println("*** 3 =>  books in library ***");
 		  System.out.println("*** 4 =>  members in library ***");
 		  System.out.println("*** 5 =>  Update library books ***");
-		  System.out.println("*** 6 =>  new member in library ***");
-		  System.out.println("*** 7 =>  Library incharge ***");
+		  System.out.println("*** 6 =>  Library incharge ***");
+		  System.out.println("*** 7 =>  new member in library ***");
 		  System.out.println("*** 8 =>  new Librarian join ***");
 		  System.out.println("*** 9 =>  exit our library ***");
 		  int ch=sc.nextInt();
+		  sc.nextLine();
 		switch(ch) {
 		
-		case 1:{
-		      String search=sc.nextLine();
-		     if( library.searchBooks( search)) {
-			   System.out.println("book is available.");
-			      library.collectBook(search);
-		       }
-		     else {
-			   System.out.println("Sorry! book is unavailable.");
-		     } 
+		case 1: {
+		    String search = sc.nextLine();
+		   // sc.nextLine();
+		    PreparedStatement pst = null;
+		    ResultSet rs = null;
+		    
+		        String selectQuery = "SELECT * FROM Books WHERE title = ?";
+		        pst = con.prepareStatement(selectQuery);
+		        pst.setString(1, search);
+		        rs = pst.executeQuery();
+
+		        if (rs.next()) {
+		            boolean available = rs.getBoolean("Available");
+		            
+		            if (available) {
+		                System.out.println("Book is available.");
+		                
+		                // Update availability
+		                String updateQuery = "UPDATE Books SET Available = false WHERE title = ?";
+		                pst = con.prepareStatement(updateQuery);
+		                pst.setString(1, search);
+		                int rowsAffected = pst.executeUpdate();
+		                
+		                System.out.println(rowsAffected + " row(s) updated.");
+		            } else {
+		                System.out.println("Sorry! Book is unavailable.");
+		            }
+		        } else {
+		            System.out.println("Book not found.");
+		        }
+		    
 		      break;
 		        }
-	   case 2:
-		    {
-		    	 System.out.println("Enter the book u want to read:");
-			    String search=sc.nextLine();
-		        library.returnBook(search);
-		        break;
-		    }
-	   case 3:
-	       {
-		       library.PrintBooks();
-		       break;
-	        }
-	   case 4:
-	       {
-		      library.PrintUser();
+		case 2: {
+		    String return_book = sc.nextLine();
+		   // sc.nextLine();
+		    PreparedStatement pst = null;
+		    ResultSet rs = null;
+		    
+		        String selectQuery = "SELECT * FROM Books WHERE title = ?";
+		        pst = con.prepareStatement(selectQuery);
+		        pst.setString(1, return_book );
+		        rs = pst.executeQuery();
+
+		        if (rs.next()) {
+		            boolean available = rs.getBoolean("Available");
+		            
+		            if (!available) {
+		                System.out.println("Successfully return the book!!!");
+		                
+		                // Update availability
+		                String updateQuery = "UPDATE Books SET Available = true WHERE title = ?";
+		                pst = con.prepareStatement(updateQuery);
+		                pst.setString(1, return_book);
+		                int rowsAffected = pst.executeUpdate();
+		                
+		                System.out.println(rowsAffected + " row(s) updated.");
+		            } else {
+		                System.out.println("Sorry! Book is not my library.");
+		            }
+		        } else {
+		            System.out.println("Book not found.");
+		        }
+		    
 		      break;
-	        }
-	   case 5:
-	       {
-	    	   System.out.println("Enter the new book_name:");
-	    	  String name=sc.nextLine();
-	    	  sc.nextLine();
-	    	  System.out.println("Enter the Author_name of the book:");
-	    	  String Author_name=sc.nextLine();
-	    	  boolean b=true;
-	    	  Books b4=new Books(name,Author_name,b);
-		      library.addBooks(b4);
-		      System.out.print("successfully added books");
-		      break;
-	        }
-	   case 6:
-          {
-        	  System.out.println("welcome the library to join new member :)");
-        	  System.out.println("Enter the name:");
-    	    String name=sc.nextLine();
-    	    sc.nextLine();
-    	    System.out.println("Enter the mail_id:");
-    	    String mail_id=sc.nextLine();
-    	    System.out.println("Enter the roll_no:");
-    	    int roll_no=sc.nextInt();
-    	    System.out.println("Enter the member_id:");
-    	    int mem_id=sc.nextInt();
-    	    System.out.println("Enter the your dept:");
-    	    String dept=sc.nextLine();
-    	    Student s5=new Student(name,mail_id,roll_no,mem_id,dept);
-	        library.addUser(s5);
-	        System.out.print("Thank you for join member in my library!!");
-	        break;
-          }
-	   case 7:
-	     {
-	    	  library.PrintLibrarian();
-	    	 break;
-	      }
-	   case 8:
-       {
-    	   
-    	   System.out.println("Welcome our library new employee :) ");
-    	   System.out.println("Enter the you name:");
- 	      String name=sc.nextLine();
- 	      sc.nextLine();
- 	   System.out.println("Enter the your email_id:");
- 	    String mail_id=sc.nextLine();
- 	   System.out.println("Enter the contact_no:");
- 	    String cont_no=sc.nextLine();
- 	   System.out.println("Enter the employee_id:");
- 	    int emp_id=sc.nextInt();
- 	   Librarian s5=new Librarian(name,mail_id,cont_no,emp_id);
-	        library.addIncharge(s5);
-	        System.out.print("Congratulation !!!");
-	        break;
-       }
+		        }
+
+		case 3:
+		{
+			Statement st=con.createStatement();
+			String query="select * from Books";
+			ResultSet rs=st.executeQuery(query);
+			while(rs.next()) {
+				System.out.print("The book_name is :"+rs.getString(1));
+				System.out.print("  -- The book_Author is :"+rs.getString(2));
+				System.out.print("  -- The Availability of book :"+rs.getBoolean(3));
+				System.out.println();
+			}
+			break;
+		}
+		case 4:{
+			Statement st=con.createStatement();
+			String query="select s.member_id,s.roll_no,s.name,s.email,s.dept  from Student s right join Library l using(member_id)";
+			ResultSet rs=st.executeQuery(query);
+			System.out.println("            *************************************************                ");
+			while(rs.next()) {
+				System.out.print("The Memeber_id is :"+rs.getInt(1));
+				System.out.print("  || The Roll_no is :"+rs.getInt(2));
+				System.out.print("  || The name of student :"+rs.getString(3));
+				System.out.print("  || Email-id :"+rs.getString(4));
+				System.out.print("  || dept of student :"+rs.getString(5));
+				System.out.println();
+			}
+			System.out.println("            *************************************************                ");
+			break;
+		}
+		case 5:
+		{
+			String title=sc.nextLine();
+			String Author=sc.nextLine();
+			Boolean Available=true;
+			String query="insert into Books values (?,?,?) ";
+			PreparedStatement pst=con.prepareStatement(query);
+			pst.setString(1, title);
+			pst.setString(2, Author);
+			pst.setBoolean(3,Available);
+			 int rowsAffected = pst.executeUpdate();
+             
+             System.out.println(rowsAffected + " row(s) updated.");
+             break;
+		}
+		
+		case 6:
+		{
+			Statement st=con.createStatement();
+			String query="select * from Librarian";
+			ResultSet rs=st.executeQuery(query);
+			while(rs.next()) {
+				System.out.print("The Librarian_name is :"+rs.getString(1));
+				System.out.print(" || Email-id :"+rs.getString(2));
+				System.out.print(" || Contact-no :"+rs.getString(3));
+				System.out.print(" || emp_id :"+rs.getInt(4));
+				System.out.println();
+			}
+			break;
+		}
+		
+		case 7:
+		{
+			int member_id=sc.nextInt();
+			String  title="";
+			Date  borrow_date=null;
+			Date   return_date=null;
+			//Boolean Available=true;
+			String query="       INSERT INTO Library (title, member_id, borrow_date, return_date)\r\n"
+					+ "VALUES (?, ?, ?, ?); ";
+			PreparedStatement pst=con.prepareStatement(query);
+			pst.setString(1,title);
+			pst.setInt(2, member_id);
+			pst.setDate(3,borrow_date);
+			pst.setDate(4, return_date);
+			 int rowsAffected = pst.executeUpdate();
+             
+             System.out.println(rowsAffected + " row(s) updated.");
+             break;
+		}
+		case 8:
+		{
+			
+			String  name=sc.nextLine();
+			String  email=sc.nextLine();
+			String  cont_no =sc.nextLine();
+			int emp_id=sc.nextInt();
+			//Boolean Available=true;
+			String query="INSERT INTO Librarian VALUES (?, ?, ?, ?)";
+			PreparedStatement pst=con.prepareStatement(query);
+			pst.setString(1,name);
+			pst.setString(2,email);
+			pst.setString(3,cont_no);
+			pst.setInt(4, emp_id);
+			 int rowsAffected = pst.executeUpdate();
+             
+             System.out.println(rowsAffected + " row(s) updated.");
+             break;
+		}
 	   case 9:
 	   {
 		   System.out.println("Thank you visiting our library!!!");
@@ -148,11 +207,13 @@ public class Main {
 	   }
 	   default:
 	   {
-		   System.out.println("please check your option!!!");
+		   System.out.println("please check your operation!!!");
 	   }
 	     
 	     
 		}
+		
+		
 		
 		if(ch==9 || ch> 9) {
 			break;
